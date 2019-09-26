@@ -1,5 +1,7 @@
 # pedal-stopwatch
 
+Live at <http://stopwatch.dreaminglanguages.com>.
+
 A simple stopwatch tool with lap support. Designed to be used with a USB pedal, but can be used also normally or with keyboard shortcuts.
 
 If your pedal generates a key press other than 'x', you can change the key in the file `src/components/stopwatch.vue`:
