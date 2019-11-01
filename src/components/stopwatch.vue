@@ -4,7 +4,7 @@
     <div class="time">{{ time }}</div>
     <div>
       <button v-shortkey.once="['s']" @shortkey="start()" v-on:click="start()" :disabled="running">Start (S)</button>
-      <button v-shortkey.once="['x']" @shortkey="newLap()" v-on:click="newLap()" :disabled="!running">Lap (X)</button>
+      <button v-shortkey.once="['x','b']" @shortkey="newLap()" v-on:click="newLap()" :disabled="!running">Lap (B/X)</button>
       <button v-shortkey.once="['t']" @shortkey="stop()" v-on:click="stop()" :disabled="!running">Stop (T)</button>
       <button v-shortkey.once="['r']" @shortkey="reset()" v-on:click="reset()" :disabled="!finished">Reset (R)</button>
     </div>
