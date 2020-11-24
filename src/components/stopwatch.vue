@@ -55,6 +55,9 @@ export default {
     this.running = data.running
     this.finished = data.finished
 
+    let now = new Date()
+    this.totalTime = Math.floor(now.valueOf() - this.beg.valueOf())
+
     if (this.running) {
       this.interval = setInterval(() => {
         let now = new Date()
