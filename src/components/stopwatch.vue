@@ -9,13 +9,16 @@
       <button v-shortkey.once="['r']" @shortkey="reset()" v-on:click="reset()" :disabled="!finished">Reset (R)</button>
     </div>
     <ul>
-      <li v-for="(lap, index) in laps">{{ displayLap(lap, index > 0 ? laps[index - 1] : null) }}</li>
+      <li v-for="(lap, index) in laps" :key="index">{{ displayLap(lap, index > 0 ? laps[index - 1] : null) }}</li>
       <li v-if="finished">End: {{ displayLap(end, laps[laps.length - 1]) }}</li>
     </ul>
+    <button v-if="finished" v-on:click="download($event)">Download .csv</button>
   </div>
 </template>
 
 <script>
+import { saveAs } from 'file-saver';
+
 export default {
   name: 'Stopwatch',
   data () {
@@ -37,24 +40,71 @@ export default {
       return this.timeText(hours, minutes, seconds)
     }
   },
+  created () {
+    const dataString = window.localStorage.getItem('stopwatch')
+
+    if (dataString === null) {
+      return
+    }
+
+    const data = JSON.parse(dataString)
+    
+    this.laps = data.laps.map(lap => new Date(lap))
+    this.end = data.end && new Date(data.end)
+    this.beg = data.beg && new Date(data.beg)
+    this.running = data.running
+    this.finished = data.finished
+
+    if (this.running) {
+      this.interval = setInterval(() => {
+        let now = new Date()
+        this.totalTime = Math.floor(now.valueOf() - this.beg.valueOf())
+      }, 1000)
+    }
+  },
   methods: {
+    saveState() {
+      const data = {
+        laps: this.laps.map(lap => lap.valueOf()),
+        end: this.end && this.end.valueOf(),
+        beg: this.beg && this.beg.valueOf(),
+        running: this.running,
+        finished: this.finished
+      }
+
+      const dataString = JSON.stringify(data)
+
+      window.localStorage.setItem('stopwatch', dataString)
+    },
     start() {
       this.running = true
-      this.beg = new Date()
+      if (this.finished === false) {
+        this.beg = new Date()
+      } else {
+        let now = new Date()
+        this.beg = new Date(now.valueOf() - (this.end.valueOf() - this.beg.valueOf()))
+        this.laps = this.laps.map(lap => new Date(now.valueOf() - (this.end.valueOf() - lap.valueOf())))
+      }
       this.interval = setInterval(() => {
         let now = new Date()
         this.totalTime = Math.floor(now.valueOf() - this.beg.valueOf())
         }, 1000)
       this.finished = false
+      
+      this.saveState()
     },
     newLap() {
       this.laps.push(new Date())
+
+      this.saveState()
     },
     stop() {
       this.running = false
       this.finished = true
       this.end = new Date()
       clearInterval(this.interval)
+
+      this.saveState()
     },
     reset() {
       this.running = false
@@ -64,6 +114,8 @@ export default {
       this.totalTime = 0
       this.laps = []
       clearInterval(this.interval)
+
+      window.localStorage.removeItem('stopwatch')
     },
     displayLap(lapTime, prevLapTime) {
       let [hours, minutes, seconds] = this.calculateHMSinterval(this.beg.valueOf(), lapTime.valueOf())
@@ -97,7 +149,20 @@ export default {
       var s = num + "";
       if (s.length < 2) s = "0" + s;
       return s;
-    }
+    },
+    download() {
+      let text = `"Screenlight Premiere Pro Marker Export 1.0",,,,
+"Name:","Time:","Duration:","Marker Color:","Comment:"
+`
+
+      for (let i = 0; i < this.laps.length; i++) {
+        const seconds = (this.laps[i].valueOf() - this.beg.valueOf()) / 1000
+        text = text + `"whatever",${seconds},0,#718637,""\n`
+      }
+      
+      let blob = new Blob([text], {type: "text/plain;charset=utf-8"})
+      saveAs(blob, "timestamps.csv")
+    },
   }
 }
 </script>
