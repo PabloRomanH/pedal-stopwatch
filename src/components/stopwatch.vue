@@ -159,8 +159,13 @@ export default {
 `
 
       for (let i = 0; i < this.laps.length; i++) {
-        const seconds = (this.laps[i].valueOf() - this.beg.valueOf()) / 1000
-        text = text + `"whatever",${seconds},0,#718637,""\n`
+        const ms = this.laps[i].valueOf() - this.beg.valueOf()
+
+        const [hours, minutes, seconds] = this.calculateHMS(ms)
+
+        let timeString = this.timeText(hours, minutes, seconds)
+
+        text = text + `"whatever",${ms / 1000},0,#718637,"${timeString}"\n`
       }
       
       let blob = new Blob([text], {type: "text/plain;charset=utf-8"})
